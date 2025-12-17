@@ -22,6 +22,7 @@ text-align:center;max-width:360px;width:90%
 width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none
 }
 .lock-box button{background:gold;font-weight:bold;cursor:pointer}
+.attempts{margin-top:8px;font-size:13px;color:#facc15}
 
 /* SPLASH */
 #splash{
@@ -127,7 +128,8 @@ text-decoration:none;font-weight:bold
 <p>Enter security code to continue</p>
 <input type="password" id="code" placeholder="Security Code">
 <button onclick="unlock()">Unlock</button>
-<p id="err" style="color:red"></p>
+<p id="err" style="color:#f87171"></p>
+<div class="attempts" id="attempts">Attempts: 0</div>
 </div>
 </div>
 
@@ -138,10 +140,13 @@ text-decoration:none;font-weight:bold
 <p>Loading verified profile…</p>
 </div>
 
-<!-- AUDIO (plays once after unlock) -->
+<!-- AUDIO -->
 <div class="audio-box">
-<audio id="bgAudio" controls>
+<audio id="successAudio" controls>
 <source src="background-audio.mp3" type="audio/mpeg">
+</audio>
+<audio id="errorAudio">
+<source src="wrong-code.mp3" type="audio/mpeg">
 </audio>
 </div>
 
@@ -227,20 +232,47 @@ WhatsApp Contact
 </a>
 
 <script>
+let attempts=0;
+
+function fadeInAudio(audio){
+audio.volume=0;
+audio.play();
+let v=0;
+const fade=setInterval(()=>{
+v+=0.05;
+audio.volume=Math.min(v,1);
+if(v>=1) clearInterval(fade);
+},120);
+}
+
 function unlock(){
+const success=document.getElementById("successAudio");
+const errorSound=document.getElementById("errorAudio");
+
 if(code.value==="JAMES"){
+attempts=0;
+attemptsEl.textContent="Attempts: 0";
 lockScreen.style.display="none";
 splash.style.display="flex";
 
-const audio=document.getElementById("bgAudio");
-audio.currentTime=0;
-audio.play();
+success.currentTime=0;
+fadeInAudio(success);
 
 setTimeout(()=>splash.style.display="none",1000);
 }else{
+attempts++;
+attemptsEl.textContent="Attempts: "+attempts;
+errorSound.currentTime=0;
+errorSound.play();
 err.textContent="Invalid security code";
+
+if(navigator.vibrate){
+navigator.vibrate(300);
 }
 }
+}
+
+const attemptsEl=document.getElementById("attempts");
 
 /* CLOCK */
 setInterval(()=>clock.textContent="SERVER TIME: "+new Date().toLocaleString(),1000);
